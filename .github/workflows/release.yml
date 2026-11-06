@@ -1,33 +1,79 @@
 name: Release
 
-# Publish a GitHub release with a tag like v0.1.0 that matches pyproject.toml.
+# Releases happen on their own: when a version bump in pyproject.toml lands on
+# main, this workflow publishes it to PyPI and then creates the tag and the
+# GitHub release. Run it by hand (Actions → Release → Run workflow) to retry.
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
+    paths: [pyproject.toml]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      publish: ${{ steps.v.outputs.publish }}
+      tag: ${{ steps.v.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if curl -fsS -o /dev/null "https://pypi.org/pypi/feedhorizon/$version/json"; then
+            echo "feedhorizon $version is already on PyPI"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+          if gh release view "v$version" >/dev/null 2>&1; then
+            echo "tag=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=true" >> "$GITHUB_OUTPUT"
+          fi
+
   publish:
+    needs: check
+    if: needs.check.outputs.publish == 'true'
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
+      contents: read
       id-token: write # PyPI trusted publishing, no token needed
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.13"
-      - name: Check that the tag matches pyproject.toml
-        run: |
-          version=$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match pyproject.toml version $version" >&2
-            exit 1
-          fi
       - run: uv sync
       - run: uv run mypy
       - run: uv run pytest
       - run: uv build
       - uses: pypa/gh-action-pypi-publish@release/v1
+
+  release:
+    needs: [check, publish]
+    if: always() && needs.check.outputs.tag == 'true' && (needs.publish.result == 'success' || needs.publish.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create tag and GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          notes=$(awk -v v="## $VERSION" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md)
+          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --notes "${notes:-Release $VERSION}"

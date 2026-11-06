@@ -201,7 +201,7 @@ uv run mypy
 curl -fsSL https://feedhorizon.com/openapi.json -o spec/openapi.json && python scripts/generate_types.py
 ```
 
-`_async_resources.py` is generated from `_resources.py` by `scripts/generate_async.py`. Releases are published to PyPI from GitHub releases (tag `vX.Y.Z`) with trusted publishing.
+`_async_resources.py` is generated from `_resources.py` by `scripts/generate_async.py`. To release, bump `version` in `pyproject.toml` and add a CHANGELOG entry. When that lands on `main`, the Release workflow publishes to PyPI with trusted publishing and creates the `vX.Y.Z` tag and GitHub release.
 
 ## License
 
