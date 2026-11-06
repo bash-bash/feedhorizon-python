@@ -1,0 +1,71 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "feedhorizon"
+version = "0.1.0"
+description = "Official Python SDK for the FeedHorizon API: schedule and publish posts on X, LinkedIn, Instagram, Bluesky, Pinterest and TikTok."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "FeedHorizon" }]
+requires-python = ">=3.10"
+dependencies = ["httpx>=0.27,<1", "typing-extensions>=4.12"]
+keywords = ["feedhorizon", "social media", "scheduling", "twitter", "linkedin", "instagram", "bluesky", "pinterest", "tiktok", "sdk"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Internet :: WWW/HTTP",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://feedhorizon.com"
+Documentation = "https://feedhorizon.com/docs"
+Repository = "https://github.com/bash-bash/feedhorizon-python"
+Issues = "https://github.com/bash-bash/feedhorizon-python/issues"
+Changelog = "https://github.com/bash-bash/feedhorizon-python/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "mypy>=1.13", "ruff==0.17.4"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/feedhorizon"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/feedhorizon", "README.md", "LICENSE", "CHANGELOG.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.mypy]
+strict = true
+# Responses are parsed JSON typed by the method signature.
+warn_return_any = false
+files = ["src", "tests"]
+python_version = "3.10"
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disable_error_code = ["comparison-overlap"]
+
+[tool.ruff]
+line-length = 140
+target-version = "py310"
+extend-exclude = ["src/feedhorizon/types.py", "src/feedhorizon/_async_resources.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["UP007", "UP045"]
