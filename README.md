@@ -45,11 +45,13 @@ Leave out the timing field for a draft, or send `addToQueue=True` or `publishNow
 import asyncio
 from feedhorizon import AsyncFeedHorizon
 
+
 async def main() -> None:
     async with AsyncFeedHorizon() as client:
         post = await client.posts.get("post_…")
         async for failed in client.posts.list(status="failed"):
             print(failed["id"])
+
 
 asyncio.run(main())
 ```
@@ -73,7 +75,9 @@ image = client.media.import_url("https://example.com/launch.jpg")
 with open("teaser.mp4", "rb") as f:
     video = client.media.upload(f, filename="teaser.mp4", mime_type="video/mp4")
 
-client.posts.create(profileId=profile_id, content="The teaser is out", platforms=["instagram"], mediaIds=[image["id"], video["id"]], addToQueue=True)
+client.posts.create(
+    profileId=profile_id, content="The teaser is out", platforms=["instagram"], mediaIds=[image["id"], video["id"]], addToQueue=True
+)
 ```
 
 ## Lists and pagination
@@ -143,10 +147,13 @@ from feedhorizon import WebhookVerificationError, construct_webhook_event
 
 app = Flask(__name__)
 
+
 @app.post("/webhooks/feedhorizon")
 def feedhorizon_webhook():
     try:
-        event = construct_webhook_event(request.get_data(), request.headers.get("X-Webhook-Signature"), os.environ["FEEDHORIZON_WEBHOOK_SECRET"])
+        event = construct_webhook_event(
+            request.get_data(), request.headers.get("X-Webhook-Signature"), os.environ["FEEDHORIZON_WEBHOOK_SECRET"]
+        )
     except WebhookVerificationError:
         return "", 400
 

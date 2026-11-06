@@ -35,7 +35,7 @@ Issues = "https://github.com/bash-bash/feedhorizon-python/issues"
 Changelog = "https://github.com/bash-bash/feedhorizon-python/blob/main/CHANGELOG.md"
 
 [dependency-groups]
-dev = ["pytest>=8", "pytest-asyncio>=0.24", "mypy>=1.13", "ruff>=0.8"]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "mypy>=1.13", "ruff==0.17.4"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/feedhorizon"]
